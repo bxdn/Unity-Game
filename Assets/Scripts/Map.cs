@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class Map
 {
@@ -52,6 +53,18 @@ public class Map
         return instance;
     }
 
+    private bool SurroundedBy(IList<Vector2Int> adjTiles, Func<Vector2Int, bool> check)
+    {
+        foreach(Vector2Int tile in adjTiles)
+        {
+            if (!check(tile))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void CreateDetails()
     {
         for (int x = 0; x < tiles.GetLength(0); x++)
@@ -60,15 +73,7 @@ public class Map
             {
                 Vector2Int pos = new Vector2Int(x, y);
                 IList<Vector2Int> immediateTiles = new List<Vector2Int>(Utils.GetAdjCoordsArr(pos)) { pos };
-                bool areSandTiles = true;
-                foreach (Vector2Int tile in immediateTiles)
-                {
-                    if (!IsSandTile(tile))
-                    {
-                        areSandTiles = false;
-                        break;
-                    }
-                }
+                bool areSandTiles = SurroundedBy(immediateTiles, IsSandTile);
                 if (areSandTiles)
                 {
                     if (Utils.r.Next(100) < 10)
@@ -83,39 +88,9 @@ public class Map
                     }
                     continue;
                 }
-                bool areGrassyTiles = true;
-                foreach (Vector2Int tile in immediateTiles)
-                {
-                    if (!IsGrassTile(tile))
-                    {
-                        areGrassyTiles = false;
-                        break;
-                    }
-                }
-                if (areGrassyTiles)
-                {
-                    if (Utils.r.Next(100) < 10)
-                    {
-                        SetDetail(pos, Detail.Tree, false);
-                        TileRegistry.GetInstance().SetTreeTile(pos);
-                    }
-                    else if (Utils.r.Next(100) < 1)
-                    {
-                        SetDetail(pos, Detail.Rock, false);
-                        TileRegistry.GetInstance().SetRockTile(pos);
-                    }
-                    continue;
-                }
-                bool areCliffTiles = true;
-                foreach (Vector2Int tile in immediateTiles)
-                {
-                    if (!IsCliffTile(tile))
-                    {
-                        areCliffTiles = false;
-                        break;
-                    }
-                }
-                if (areCliffTiles)
+                bool areGrassyTiles = SurroundedBy(immediateTiles, IsGrassTile);
+                bool areCliffTiles = SurroundedBy(immediateTiles, IsCliffTile);
+                if (areGrassyTiles || areCliffTiles)
                 {
                     if (Utils.r.Next(100) < 10)
                     {
@@ -348,23 +323,24 @@ public class Map
         GetGameTile(pos).detail = detail;
         if (detail != null)
         {
-            Detail nonNullDetail = (Detail)detail;
+            Detail nonNullDetail = (Detail) detail;
             if (!detailTiles.ContainsKey(nonNullDetail))
             {
                 detailTiles[nonNullDetail] = new HashSet<Vector2Int>();
             }
             detailTiles[nonNullDetail].Add(pos);
-
-            ISet<Vector2Int> regionToRemove = null;
             foreach (ISet<Vector2Int> region in regions)
             {
                 if (region.Contains(pos))
                 {
-                    regionToRemove = region;
+                    regions.Remove(region);
                     break;
                 }
             }
-            regions.Remove(regionToRemove);
+            if (adjustRegions)
+            {
+                CalculateRegions();
+            }
         }
         else
         {
@@ -375,26 +351,27 @@ public class Map
                     break;
                 }
             }
-            ISet<ISet<Vector2Int>> regionsToRemove = new HashSet<ISet<Vector2Int>>();
+            ISet<Vector2Int> joinRegion = null;
             foreach (Vector2Int adjTile in Utils.GetAdjCoordsArr(pos))
             {
                 foreach (ISet<Vector2Int> region in regions)
                 {
                     if (region.Contains(adjTile))
                     {
-                        regionsToRemove.Add(region);
+                        if(joinRegion == null)
+                        {
+                            joinRegion = region;
+                            joinRegion.Add(pos);
+                        }
+                        else if (region != joinRegion)
+                        {
+                            joinRegion.UnionWith(region);
+                            regions.Remove(region);
+                        }
                         break;
                     }
                 }
             }
-            foreach (ISet<Vector2Int> region in regionsToRemove)
-            {
-                regions.Remove(region);
-            }
-        }
-        if (adjustRegions)
-        {
-            CalculateRegions();
         }
     }
 

@@ -17,13 +17,12 @@ public class Character
     private ICharacterJob curJob;
     private readonly Queue<ICharacterJob> jobs;
     private readonly IDictionary<Map.Detail, int> inventory;
-    private static readonly String namesPath = Application.dataPath + 
-        Path.DirectorySeparatorChar + "Resources" + Path.DirectorySeparatorChar + "names.csv";
+    private static readonly TextAsset namesCsv = Resources.Load<TextAsset>("names");
     private static readonly int[] spriteNums = new int[3] { 1, 2, 4 };
     private static readonly Font ARIAL = Resources.GetBuiltinResource<Font>("Arial.ttf");
     public Character(Vector2 initialPos)
 	{
-        String[] allNames = File.ReadAllLines(namesPath);
+        String[] allNames = namesCsv.text.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
         String[] nameRow = allNames[Utils.r.Next(allNames.Length)].Split(',');
         name = nameRow[0];
         sex = nameRow[1] == "M" ? Sex.Male : Sex.Female;

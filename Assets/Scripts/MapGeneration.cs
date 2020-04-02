@@ -34,7 +34,7 @@ public class MapGeneration : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds the detail sprites like trees, rocks, etc
+    /// Adds sparkles to shore tiles
     /// </summary>
     private void AddSparkles()
     {
@@ -176,7 +176,7 @@ public class MapGeneration : MonoBehaviour
             Vector2Int pos = tile.Key;
             int wangIdx = tile.Value;
             bool isSolid = wangIdx == 0 || wangIdx == 15;
-            // Only add the sprite if the tile is empty or we're overwriting a solid
+            // Don't overwrite tile if it has already been "Wanged"
             if (!filledWangTiles.Contains(pos))
             {
                 if (isSolid)
