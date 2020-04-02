@@ -427,10 +427,10 @@ public class Map
                 break;
             }
         }
-        Vector2Int? closestDetail = null;
-        int minDistSq = int.MaxValue;
         if (correctRegion != null)
         {
+            Vector2Int? closestDetail = null;
+            double minDistSq = int.MaxValue;
             foreach (Vector2Int detail in GetDetailTiles(detailType))
             {
                 if (!GetGameTile(detail).locked)
@@ -439,7 +439,7 @@ public class Map
                     {
                         if (correctRegion.Contains(adjTile))
                         {
-                            int distSq = (int)(Math.Pow(detail.x - pos.x, 2) + Math.Pow(detail.y - pos.y, 2));
+                            double distSq = Math.Pow(detail.x - pos.x, 2) + Math.Pow(detail.y - pos.y, 2);
                             if (distSq < minDistSq)
                             {
                                 minDistSq = distSq;
@@ -450,8 +450,9 @@ public class Map
                     }
                 }
             }
+            return closestDetail;
         }
-        return closestDetail;
+        return null;
     }
 
     public void SetLocked(Vector2Int pos, bool locked)
