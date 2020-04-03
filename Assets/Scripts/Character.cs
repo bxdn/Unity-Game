@@ -131,10 +131,12 @@ public class Character
         jobs.Enqueue(new MoveJob(this, pos, true));
     }
 
-    public void ChopTree(Vector2Int tree)
+    public void ChopTree(Vector2Int tree, Vector2Int dropOff)
     {
         jobs.Enqueue(new MoveJob(this, tree, false));
         jobs.Enqueue(new ChopJob(tree));
+        jobs.Enqueue(new MoveJob(this, dropOff, true));
+        jobs.Enqueue(new DropoffJob(dropOff, Map.Item.Wood));
     }
 
     public void Sleep(int sleepTime)

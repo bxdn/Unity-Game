@@ -20,9 +20,10 @@ public class MobBehavior : MonoBehaviour
             if (character.IsIdle())
             {
                 Vector2Int? nearestTree = Map.GetInstance().FindClosestAccessibleDetail(Map.Detail.Tree, character.GetCurrentTilePosition());
-                if(nearestTree != null)
+                Vector2Int? emptyStockPile = Map.GetInstance().GetAvailableStockpileTile();
+                if(nearestTree != null && emptyStockPile != null)
                 {
-                    character.ChopTree((Vector2Int) nearestTree);
+                    character.ChopTree((Vector2Int) nearestTree, (Vector2Int) emptyStockPile);
                 }
             }
             character.DoJobProgress();

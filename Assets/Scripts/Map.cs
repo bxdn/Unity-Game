@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public class Map
 {
@@ -44,6 +43,10 @@ public class Map
         Tree,
         Palm
     }
+    public enum Item
+    {
+        Wood
+    }
     public static Map GetInstance()
     {
         if (instance == null)
@@ -51,6 +54,44 @@ public class Map
             instance = new Map();
         }
         return instance;
+    }
+
+    public Vector2Int? GetAvailableStockpileTile()
+    {
+        Vector2Int? closestToStart = null;
+        double minDistSq = double.MaxValue;
+        foreach(Vector2Int tile in stockpile)
+        {
+            if(GetGameTile(tile).item == null && GetGameTile(tile).locked == false)
+            {
+                return tile;
+            }
+            foreach(Vector2Int adjTile in Utils.GetAdjCoordsArr(tile))
+            {   
+                if((IsSandTile(adjTile) || IsGrassTile(adjTile)) 
+                    && GetGameTile(adjTile).detail == null && !stockpile.Contains(adjTile)){
+                    double distSq = Math.Pow(tile.x - startPosition.x, 2) + Math.Pow(tile.y - startPosition.y, 2);
+                    if(distSq < minDistSq)
+                    {
+                        closestToStart = tile;
+                        minDistSq = distSq;
+                    }
+                    break;
+                }
+            }
+        }
+        if(closestToStart != null)
+        {
+            foreach (Vector2Int adjTile in Utils.GetAdjCoordsArr((Vector2Int)closestToStart))
+            {
+                if ((IsSandTile(adjTile) || IsGrassTile(adjTile)) 
+                    && GetGameTile(adjTile).detail == null && stockpile.Add(adjTile))
+                {
+                    return adjTile;
+                }
+            }
+        }
+        return null;
     }
 
     private bool SurroundedBy(IList<Vector2Int> adjTiles, Func<Vector2Int, bool> check)
@@ -73,8 +114,7 @@ public class Map
             {
                 Vector2Int pos = new Vector2Int(x, y);
                 IList<Vector2Int> immediateTiles = new List<Vector2Int>(Utils.GetAdjCoordsArr(pos)) { pos };
-                bool areSandTiles = SurroundedBy(immediateTiles, IsSandTile);
-                if (areSandTiles)
+                if (SurroundedBy(immediateTiles, IsSandTile))
                 {
                     if (Utils.r.Next(100) < 10)
                     {
@@ -86,11 +126,8 @@ public class Map
                         SetDetail(pos, Detail.DessertRock, false);
                         TileRegistry.GetInstance().SetRockBeachTile(pos);
                     }
-                    continue;
                 }
-                bool areGrassyTiles = SurroundedBy(immediateTiles, IsGrassTile);
-                bool areCliffTiles = SurroundedBy(immediateTiles, IsCliffTile);
-                if (areGrassyTiles || areCliffTiles)
+                else if (SurroundedBy(immediateTiles, IsGrassTile) || SurroundedBy(immediateTiles, IsCliffTile))
                 {
                     if (Utils.r.Next(100) < 10)
                     {
@@ -311,6 +348,16 @@ public class Map
             return tile.height;
         }
         return null;
+    }
+
+    public void SetItem(Vector2Int pos, Item? item)
+    {
+        GetGameTile(pos).item = item;
+    }
+
+    public Item? GetItem(Vector2Int pos)
+    {
+        return GetGameTile(pos).item;
     }
 
     public void SetDetail(Vector2Int pos, Detail? detail)

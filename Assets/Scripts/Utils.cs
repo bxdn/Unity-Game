@@ -292,7 +292,7 @@ public class Utils
         }
     }
 
-    public struct AStarNode
+    private struct AStarNode
     {
         public float score;
         public Vector2Int? prevTile;

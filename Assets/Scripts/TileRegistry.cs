@@ -13,9 +13,6 @@ public class TileRegistry
     private readonly IList<Tile> rockBeachTiles;
     private readonly IDictionary<String, Sprite> allSprites;
     private static readonly Tilemap baseMap = GameObject.Find("Tilemap-Base").GetComponent<Tilemap>();
-
-    
-
     private static readonly Tilemap detailMap = GameObject.Find("Tilemap-Detail").GetComponent<Tilemap>();
 
 
@@ -75,6 +72,16 @@ public class TileRegistry
         {
             Debug.Log(spriteName + "Does not exist!");
             Debug.Log(e.StackTrace);
+        }
+    }
+
+    internal void SetItem(Vector2Int pos, Map.Item item)
+    {
+        switch (item)
+        {
+            case Map.Item.Wood:
+                detailMap.SetTile(new Vector3Int(pos.x, pos.y, 0), allTiles[Constants.WOOD_SPRITE]);
+                break;
         }
     }
 
