@@ -10,14 +10,12 @@ public class DropoffJob : ICharacterJob
 	{
         this.pos = pos;
         this.item = item;
-        Map.GetInstance().SetLocked(pos, true);
 	}
 
     public void DoProgress()
     {
         Map.GetInstance().SetItem(pos, item);
         TileRegistry.GetInstance().SetItem(pos, item);
-        Map.GetInstance().SetLocked(pos, false);
         isDone = true;
     }
 

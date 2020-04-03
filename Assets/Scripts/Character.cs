@@ -14,7 +14,6 @@ public class Character
     private GameObject panel;
     private GameObject text;
     private GameObject sprite;
-    private ICharacterJob curJob;
     private readonly Queue<ICharacterJob> jobs;
     private readonly IDictionary<Map.Detail, int> inventory;
     private static readonly TextAsset namesCsv = Resources.Load<TextAsset>("names");
@@ -105,25 +104,23 @@ public class Character
 
     public void DoJobProgress()
     {
-        if(IsIdle() || curJob.IsDone())
+        if(jobs.Count == 0)
         {
-            if (jobs.Count > 0)
-            {
-                curJob = jobs.Dequeue();
-                DoJobProgress();
-            }
-            else 
-            {
-                curJob = null;
-            }
             return;
         }
-        curJob.DoProgress();
+        ICharacterJob job = jobs.Peek();
+        if(job.IsDone())
+        {
+            jobs.Dequeue();
+            DoJobProgress();
+            return;
+        }
+        job.DoProgress();
     }
 
     public bool IsIdle()
     {
-        return curJob == null;
+        return jobs.Count == 0;
     }
 
     public void MoveTo(Vector2Int pos)
@@ -131,12 +128,9 @@ public class Character
         jobs.Enqueue(new MoveJob(this, pos, true));
     }
 
-    public void ChopTree(Vector2Int tree, Vector2Int dropOff)
+    public void ChopTree()
     {
-        jobs.Enqueue(new MoveJob(this, tree, false));
-        jobs.Enqueue(new ChopJob(tree));
-        jobs.Enqueue(new MoveJob(this, dropOff, true));
-        jobs.Enqueue(new DropoffJob(dropOff, Map.Item.Wood));
+        jobs.Enqueue(new GatherWoodJob(this));
     }
 
     public void Sleep(int sleepTime)
